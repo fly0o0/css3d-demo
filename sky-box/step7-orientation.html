@@ -1,0 +1,178 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="format-detection" content="telphone=no, email=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimal-ui">
+  <script src="//cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+  <title>CSS3D天空盒子</title>
+  <style>
+    html,
+    body {
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .camera {
+      perspective: 5.12rem;
+      perspective-origin: 50% 50%;
+    }
+
+    .space {
+      width: 10.24rem;
+      height: 10.24rem;
+      margin: 0 auto;
+      transform-style: preserve-3d;
+    }
+
+    .space img {
+      width: 10.24rem;
+      height: 10.24rem;
+      position: absolute;
+    }
+
+    .space .front {
+      /* 正面的图无需旋转 */
+      transform: rotateZ(0) rotateY(0) rotateZ(0) translateZ(-5.12rem);
+    }
+    .space .back {
+      transform: rotateY(180deg) translateZ(-5.12rem);
+    }
+    .space .left {
+      transform: rotateY(90deg) translateZ(-5.12rem);
+    }
+    .space .right {
+      transform: rotateY(-90deg) translateZ(-5.12rem);
+    }
+    .space .bottom {
+      transform: rotateX(90deg) translateZ(-5.12rem);
+    }
+    .space .top {
+      transform: rotateX(-90deg) translateZ(-5.12rem);
+    }
+  </style>
+  <script>
+    var resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize';
+    var widthProportion = function () {
+      var doc = document.body || document.documentElement;
+      var p = doc.clientWidth;
+      var fontSize = p / 7.5;
+      if (fontSize >= 100) {
+        fontSize = 100;
+      }
+      return fontSize;
+    };
+    var changePage = function () {
+      document.getElementsByTagName('html')[0].setAttribute('style', 'font-size:' + widthProportion() + 'px !important');
+    };
+
+    changePage();
+    window.addEventListener(resizeEvt, changePage, false);
+  </script>
+</head>
+
+<body>
+
+  <div class="camera" id="camera">
+    <div class="space">
+      <img class="front" src="//yun.dui88.com/tuia/junhehe/skybox/front.jpg" alt="" />
+      <img class="back" src="//yun.dui88.com/tuia/junhehe/skybox/back.jpg" alt="" />
+      <img class="left" src="//yun.dui88.com/tuia/junhehe/skybox/left.jpg" alt="" />
+      <img class="right" src="//yun.dui88.com/tuia/junhehe/skybox/right.jpg" alt="" />
+      <img class="bottom" src="//yun.dui88.com/tuia/junhehe/skybox/bottom.jpg" alt="" />
+      <img class="top" src="//yun.dui88.com/tuia/junhehe/skybox/top.jpg" alt="" />
+    </div>
+  </div>
+
+  <script src="//libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+  <script type="text/javascript">
+
+    var BG_WIDTH = 1024,
+      BG_HEIGHT = 1024,
+      BG_NUMBER = 4,
+      PER_ANGLE = 360 / BG_NUMBER;
+    var allRotateY = 0;
+
+    var u = navigator.userAgent
+    var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; // android??
+    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); // ios??
+
+    var translateZ = (function calTranslateZ(opts) {
+      return Math.round(opts.width / (2 * Math.tan(Math.PI / opts.number)))
+    })({
+      width: BG_WIDTH,
+      number: BG_NUMBER
+    })
+
+    var curMouseX = 0;
+    var curMouseY = 0;
+    var lastMouseX = 0;
+    var lastMouseY = 0;
+    var lastAngleX = 0;
+    var lastAngleY = 0;
+    var aimAngleX = 0, aimAngleY = 0;
+    var curBgAngleX = 0, curBgAngleY = 0;
+
+    function permission () {
+      if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
+          // (optional) Do something before API request prompt.
+          DeviceMotionEvent.requestPermission()
+              .then( response => {
+              // (optional) Do something after API prompt dismissed.
+              if ( response == "granted" ) {
+                  window.addEventListener( "devicemotion", (e) => {
+                      // do something for 'e' here.
+                  })
+              }
+          })
+                .catch( console.error )
+        } else {
+            alert( "请使用手机浏览器" );
+        }
+    }
+    if (isiOS) {
+      permission()
+    }
+
+    var bindDeviceMotion = function () {
+      window.addEventListener('deviceorientation', motionHandler, false)
+      function motionHandler(event) {
+        var x = event.beta;  // In degree in the range [-180,180]
+        var y = event.gamma; // In degree in the range [-90,90]
+        aimAngleX = y * 2;
+      }
+    }
+
+    bindDeviceMotion();
+
+    function initAnimate() {
+      var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame ||
+        function (callback) {
+          setTimeout(callback, 1000 / 60)
+        }
+
+      requestAnimationFrame(go)
+
+      // loop
+      function go() {
+        // bg 与 item 的位移增量速度的不一致，可形成视差运动
+        curBgAngleX += (aimAngleX - curBgAngleX);
+        // curBgAngleY += (aimAngleY - curBgAngleY);
+
+        console.log(aimAngleX);
+
+        $(".space").css({
+          transform: "rotateY(" + -curBgAngleX + "deg)"
+        })
+
+        frameTimer = requestAnimationFrame(go);
+      }
+    }
+
+    initAnimate();
+
+  </script>
+</body>
+
+</html>

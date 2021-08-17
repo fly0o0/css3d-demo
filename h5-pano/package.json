@@ -1,0 +1,14 @@
+{
+  "name": "h5-pano",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "yufei",
+  "license": "",
+  "devDependencies": {
+    "ejs": "^2.5.5",
+    "express": "^4.13.4"
+  }
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <!--<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>-->
+    <meta name="viewport" content="user-scalable=no" />
+    <title>双十一</title>
+    <script src="https://unpkg.com/vconsole/dist/vconsole.min.js"></script>
+<script>
+  // VConsole will be exported to `window.VConsole` by default.
+  var vConsole = new window.VConsole();
+</script>
+    <script src="libs/extra/jquery-1.11.1.min.js"></script>
+    <script src="libs/extra/css3d.js"></script>
+    <script src="libs/extra/weixinapi.min.js"></script>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #maskDiv,
+        #maskDiv2 {
+            width: 100%;
+            height: 100%;
+        }
+
+        #mask,
+        #share_mask {
+            width: 100%;
+            height: 100%;
+        }
+
+        #maskDiv img,
+        #maskDiv2 img {
+            display: block;
+            position: absolute;
+        }
+    </style>
+</head>
+
+<body onload="init();">
+
+    <div id="main" style="display: none">
+    </div>
+    <div id="maskDiv" style="display: none;">
+        <img id="mask" src="images/alert/mask.png" alt="遮罩">
+        <div id="alertcontent" style="display: none;">
+            <img id="alert1" src="images/alert/p1_alert1.png" alt="弹窗">
+            <img id="go" src="images/alert/go.png" alt="Go">
+            <img id="triangle" src="images/alert/triangle.png" alt="三角形">
+            <img id="close" src="images/alert/close.png" alt="关闭">
+        </div>
+    </div>
+    <script src="libs/extra/quanj.js?v=111"></script>
+    <script src="libs/extra/Tween.js"></script>
+    <script src="libs/extra/index.js"></script>
+
+
+    <!-- <button id="startBtn">开启摇一摇</button>
+<button id="closeBtn">关闭摇一摇</button> -->
+<script>   
+    /*
+        setDeviceMotion 添加陀螺仪监控
+            参数：
+                cb devicemotion的事件处理函数
+                errCb 不支持 devicemotion 时的处理回调
+    */    
+    function setDeviceMotion(cb,errCb){
+        if(!window.DeviceMotionEvent){
+                errCb("设备不支持DeviceMotion"); 
+            return;
+        }
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            // IOS 13
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('devicemotion',cb);
+                    }
+                })
+                .catch((err)=>{
+                    errCb("用户未允许权限");
+                });
+        } else {
+            // 其他支持加速度检测的系统
+            let timer = setTimeout(function(){
+                errCb("用户未开启权限");
+            },1000);
+            window.addEventListener("devicemotion",(e)=>{
+                clearTimeout(timer);
+            },{once:true});
+            window.addEventListener("devicemotion",cb);
+        }
+    } 
+    /*
+        throttle 节流函数
+            参数：
+                fn 要节流的函数
+                interval 节流间隔时间
+                start 是否在节流开始时执行 (true在开始时执行，false在结束时执行)
+            返回值：
+                经过节流处理的函数
+    */
+    function throttle(fn,interval=200,start = true){
+        if(typeof fn !== "function"){
+            return console.error("请传入一个函数");
+        }
+        let timer = 0;
+        return function(...arg){
+            let _this = this;
+            if(timer){
+                return ;
+            }
+            start&&fn.apply(_this,arg); 
+            timer = setTimeout(() => {
+                (!start)&&fn.apply(_this,arg); 
+                timer = 0;
+            }, interval);
+        }
+    }      
+    /*
+        addShake 添加摇一摇功能
+        参数： 
+                cbShake 类型 fn 当用户进行了摇一摇之后要做的事情
+        返回值：
+                shakeIndex 开启的第几个摇一摇功能的索引，用来删除监听     
+    */ 
+    function addShake(cbShake){ 
+        const maxRange = 60; //当用户的两次加速度差值大于这个幅度，判定用户进行了摇一摇功能
+        const minRange = 10; //当用户的两次加速度差值小于这个幅度，判定用户停止摇动手机
+        let isShake = false; //记录用户是否摇动手机
+        let lastX=0,
+        lastY = 0,
+        lastZ = 0;
+        function toShake(e){
+            let motion = e.acceleration;
+            let {x,y,z} = motion;
+            let range = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
+            if(range > maxRange){//用户进行了摇一摇
+                isShake = true;
+            }
+            if(range < minRange&&isShake){ // 停止摇一摇
+                cbShake(e);
+                isShake = false;
+            }
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+        }
+        if(!window.shakeEvent){ //建立 shakeEvent 存储所有的摇一摇的处理函数，方便一会取消
+            window.shakeEvent = [];
+        }
+        toShake = throttle(toShake);
+        window.shakeEvent.push(toShake);
+        setDeviceMotion(toShake,(errMessage)=>{
+            alert(errMessage)
+        })
+        return  window.shakeEvent.length - 1;//返回该次摇一摇处理的索引
+    }
+    /*
+        删除摇一摇监听
+            cbShake 类型 fn 当用户进行了摇一摇之后要做的事情
+    */ 
+    function remveShake(shakeIndex){
+        window.removeEventListener("devicemotion",window.shakeEvent[shakeIndex]);
+    }
+
+    // 调用摇一摇
+    {
+        let startBtn = document.body;
+        // let closeBtn = document.querySelector("#closeBtn");
+        let isStartShake = false;
+        let shakeIndex;
+        // 再次强调 IOS 13.3 需要用户触发，再能开启摇一摇 
+        startBtn.addEventListener("touchend",()=>{
+            if(isStartShake)return;
+            isStartShake = true;
+            shakeIndex = addShake(()=>{
+                alert("您进行了摇一摇")
+            })
+        });
+        // closeBtn.addEventListener("touchend",()=>{
+        //     if(!isStartShake)return;
+        //     isStartShake = false;
+        //     remveShake(shakeIndex);
+        // });
+
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+<html>
+<head>
+  <title>CSS3D天空盒子</title>
+  <style>
+    html,
+    body {
+      overflow: hidden;    
+      margin: 0;
+    }
+    .camera {
+      perspective: 512px;
+      perspective-origin:50% 50%;
+    }
+    .space {
+      width: 1024px;
+      height: 1024px;
+      margin: 0 auto;
+      transform-style: preserve-3d;
+    }
+    .space img {
+      width: 1024px;
+      height: 1024px;
+      position: absolute;
+    }
+    .space .front {
+      /* 正面的图无需旋转 */
+      transform: rotateZ(0) rotateY(0) rotateZ(0) translateZ(-512px);
+    }
+    .space .back {
+      transform: rotateY(180deg) translateZ(-512px);
+    }
+    .space .left {
+      transform: rotateY(90deg) translateZ(-512px);
+    }
+    .space .right {
+      transform: rotateY(-90deg) translateZ(-512px);
+    }
+    .space .bottom {
+      transform: rotateX(90deg) translateZ(-512px);
+    }
+    .space .top {
+      transform: rotateX(-90deg) translateZ(-512px);
+    }
+  </style>
+</head>
+<body>
+  <div class="camera" id="camera">
+    <div class="space">
+      <img class="front" src="//yun.dui88.com/tuia/junhehe/skybox/front.jpg" alt="" />
+      <img class="back" src="//yun.dui88.com/tuia/junhehe/skybox/back.jpg" alt="" />
+      <img class="left" src="//yun.dui88.com/tuia/junhehe/skybox/left.jpg" alt="" />
+      <img class="right" src="//yun.dui88.com/tuia/junhehe/skybox/right.jpg" alt="" />
+      <img class="bottom" src="//yun.dui88.com/tuia/junhehe/skybox/bottom.jpg" alt="" />
+      <img class="top" src="//yun.dui88.com/tuia/junhehe/skybox/top.jpg" alt="" />
+    </div>
+  </div>
+</body>
+</html>

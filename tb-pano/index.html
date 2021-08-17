@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <!--<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>-->
+    <meta name="viewport" content="user-scalable=no" />
+    <title>2017聚划算年货节</title>
+    <script src="libs/extra/jquery-1.11.1.min.js"></script>
+    <script src="libs/extra/css3d.js"></script>
+    <script src="libs/extra/weixinapi.min.js"></script>
+
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        
+        #maskDiv,
+        #maskDiv2 {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #mask,
+        #share_mask {
+            width: 100%;
+            height: 100%;
+        }
+        
+        #maskDiv img,
+        #maskDiv2 img {
+            display: block;
+            position: absolute;
+        }
+        
+        #snow {
+            transform: scale(0, 0);
+            animation: snowmove 2s infinite;
+            -webkit-animation: snowmove 2s infinite;
+        }
+        
+        @keyframes snowmove {
+            from {
+                transform: scale(0, 0);
+            }
+            to {
+                transform: scale(1, 1);
+            }
+        }
+        
+        @-webkit-keyframes snowmove {
+            from {
+                transform: scale(0, 0);
+            }
+            to {
+                transform: scale(1, 1);
+            }
+        }
+        
+        #music_icon {
+            position: absolute;
+            display: block;
+            top: 40px;
+            right: 40px;
+            transform: scale(1.5);
+        }
+    </style>
+</head>
+
+<body onload="init();">
+
+    <div id="main" style="display: none">
+    </div>
+    <img id="music_icon" src="images/music1.png" alt="">
+    <div id="maskDiv" style="display: none;">
+        <img id="mask" src="images/alert/mask.png" alt="遮罩">
+        <img id="snow" src="images/alert/alert_frame/alert_frame5.png" alt="雪">
+        <div id="alertcontent" style="display: none;">
+            <img id="alert1" src="images/alert/p1_alert1.png" alt="弹窗">
+            <img id="go" src="images/alert/go.png" alt="Go">
+            <img id="triangle" src="images/alert/triangle.png" alt="三角形">
+            <img id="close" src="images/alert/close.png" alt="关闭">
+        </div>
+    </div>
+    <div id="maskDiv2" style="display: none;">
+        <img id="share_mask" src="images/alert/mask.png" alt="遮罩">
+        <img id="share" src="images/share_guide.png" alt="分享">
+    </div>
+    <audio id="bgMusic" src="images/bgSound.mp3" autoplay="autoplay" loop="loop"></audio>
+    <script src="libs/extra/quanj.js?v=111"></script>
+    <script src="libs/extra/Tween.js"></script>
+    <script>
+		var obj;
+		$.ajax({
+		type: "POST",
+		url: 'http://t.hwu5.com/tmall-SpringFestival1230/Home/Index',
+		async: false,
+		success: function(data)
+		{
+		if(data.status == "fail")
+		{
+		alert(data.msg);
+		} else
+		{
+		obj = JSON.parse(data);
+		}
+		},
+		error: function(msg)
+		{
+		alert(msg)
+		}
+		});
+        wx.config({
+		//debug: true,
+		appId: obj.appId,
+		timestamp: obj.timestamp,
+		nonceStr: obj.nonceStr,
+		signature: obj.signature,
+		jsApiList: [
+		// 所有要调用的 API 都要加到这个列表中
+		'onMenuShareTimeline',
+		'onMenuShareAppMessage'
+		]
+		});
+        
+        wx.ready(function () {
+            document.getElementById("bgMusic").play();
+		wx.onMenuShareTimeline({
+		title: '小金鸡开始囤年货啦', // 分享标题
+	    link: window.location.host+'/tmall-SpringFestival1230/index.html', // 分享链接
+		imgUrl: 'http://'+window.location.host+'/tmall-SpringFestival1230/share.jpg', // 分享图标
+		success: function () {
+		// 用户确认分享后执行的回调函数
+        _czc.push(["_trackEvent","分享","分享到朋友圈"]);
+		},
+		cancel: function () {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		
+		wx.onMenuShareAppMessage({
+		title: '小金鸡开始囤年货啦', // 分享标题
+		desc: '漂漂亮亮过大年欢天喜地囤年货', // 分享描述
+		link: window.location.host+'/tmall-SpringFestival1230/index.html', // 分享链接
+		imgUrl: 'http://'+window.location.host+'/tmall-SpringFestival1230/share.jpg', // 分享图标
+		type: 'link', // 分享类型,music、video或link，不填默认为link
+		dataUrl: '', // 如果type是music或video，则要提供数据链接，默认为空
+		success: function () {
+		// 用户确认分享后执行的回调函数
+        _czc.push(["_trackEvent","分享","分享给朋友"]);
+		},
+		cancel: function () {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		});
+        // 音乐开关
+        var music_flag=true;
+        var music_icon=$("#music_icon").click(function(){
+            if(music_flag){
+                music_flag=false;
+                document.getElementById("bgMusic").pause();
+                $("#music_icon").attr({src:"images/music2.png"});
+            }else{
+                 music_flag=true;
+               document.getElementById("bgMusic").play();
+                $("#music_icon").attr({src:"images/music1.png"});
+               
+            }
+        })
+    var s = creatScene();
+    function resize() {
+        s.size(window.innerWidth, window.innerHeight).update();
+    };
+    window.onresize = function () {
+        resize();
+    };
+    resize();
+
+    requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame ||
+        function (callback) {
+            setTimeout(callback, 1000 / 60);
+        };
+
+    var rotateSpeed = 10;
+    var startX, startY;
+    var RotateY = 0;
+    var spa = window["spMain"];
+    function init() {
+        var main = document.getElementById("main");
+        main.style.display = "block";
+        main.addEventListener("touchstart", function (ev) {
+            ev.preventDefault();
+            startX = ev.targetTouches[0].pageX;
+            startY = ev.targetTouches[0].pageY;
+        }, false);
+
+        main.addEventListener("touchmove", function (ev) {
+            if(rotateSpeed == 0)
+            {
+                ev.preventDefault();
+               
+                var rotateY = (ev.targetTouches[0].pageY - startY) / 10;
+                if (Math.abs((RotateY +rotateY)%360) >= 100){
+                    rotateY = 0;
+                }
+                RotateY += rotateY;
+                spa.rotate(rotateY, -(ev.targetTouches[0].pageX - startX) / 10, 0).updateT();
+                if (rotateY != 0) {
+                    moveIcon(rotateY);
+                }
+                startX = ev.targetTouches[0].pageX;
+                startY = ev.targetTouches[0].pageY;
+            }
+
+        }, false);
+
+        var u = navigator.userAgent;
+        var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android??
+        var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios??
+
+        window.addEventListener("devicemotion", motionHandler, false);
+        function motionHandler(event) {
+            if(rotateSpeed == 0)
+            {
+                var rotationRate = event.rotationRate;
+                var db = rotationRate.beta;
+                var sY = rotationRate.alpha;
+                if (isiOS) {
+                    db = db / 100;
+                    sY = sY / 100;
+                }
+                //减少抖动
+                if(Math.abs(sY)>0.01){
+                    var rotateY = sY*4;
+                    if (Math.abs((RotateY +rotateY)%360) >= 100){
+                        rotateY = 0;
+                    }
+                    RotateY += rotateY;
+                    spa.rotate(rotateY, 0, 0).updateT();
+                }
+
+                if (Math.abs(db) > 0.01) {
+                    spa.rotate(0, -db * 4, 0).updateT();
+                }
+            }
+
+        }
+
+        resize();
+    }
+    var du = 0;
+    render();
+    function render() {
+        TWEEN.update();
+        updateWord();
+        requestAnimationFrame(render);
+        // checkArr();
+        if(rotateSpeed != 0)
+        {
+            du+= 1.5;
+            spa.rotate(0, 1.5, 0).updateT();
+            if(du >= 360)
+            {
+                rotateSpeed = 0;
+            }
+        }
+    }
+</script>
+</body>
+
+</html>

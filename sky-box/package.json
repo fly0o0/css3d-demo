@@ -1,0 +1,21 @@
+{
+  "name": "sky-box",
+  "author": "yufei",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "devDependencies": {
+    "express-to-koa": "^1.0.6",
+    "internal-ip": "^3.0.1",
+    "koa": "^2.7.0",
+    "koa-body": "^4.0.8",
+    "koa-compress": "^3.0.0",
+    "koa-conditional-get": "^2.0.0",
+    "koa-connect": "^2.0.1",
+    "koa-etag": "^3.0.0",
+    "koa-loggers": "^0.6.0",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0"
+  },
+  "dependencies": {}
+}
