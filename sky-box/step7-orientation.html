@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimal-ui">
   <script src="//cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
-  <title>CSS3D天空盒子</title>
+  <title>CSS3D天空盒子 - step7</title>
   <style>
     html,
     body {
@@ -86,6 +86,136 @@
   </div>
 
   <script src="//libs.baidu.com/jquery/2.1.1/jquery.min.js"></script>
+
+  <script>   
+    /*
+        setDeviceMotion 添加陀螺仪监控
+            参数：
+                cb devicemotion的事件处理函数
+                errCb 不支持 devicemotion 时的处理回调
+    */    
+    function setDeviceMotion(cb,errCb){
+        if(!window.DeviceMotionEvent){
+                errCb("设备不支持DeviceMotion"); 
+            return;
+        }
+        if (typeof DeviceMotionEvent.requestPermission === 'function') {
+            // IOS 13
+            DeviceMotionEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('devicemotion',cb);
+                    }
+                })
+                .catch((err)=>{
+                    errCb("用户未允许权限");
+                });
+        } else {
+            // 其他支持加速度检测的系统
+            let timer = setTimeout(function(){
+                errCb("用户未开启权限");
+            },1000);
+            window.addEventListener("devicemotion",(e)=>{
+                clearTimeout(timer);
+            },{once:true});
+            window.addEventListener("devicemotion",cb);
+        }
+    } 
+    /*
+        throttle 节流函数
+            参数：
+                fn 要节流的函数
+                interval 节流间隔时间
+                start 是否在节流开始时执行 (true在开始时执行，false在结束时执行)
+            返回值：
+                经过节流处理的函数
+    */
+    function throttle(fn,interval=200,start = true){
+        if(typeof fn !== "function"){
+            return console.error("请传入一个函数");
+        }
+        let timer = 0;
+        return function(...arg){
+            let _this = this;
+            if(timer){
+                return ;
+            }
+            start&&fn.apply(_this,arg); 
+            timer = setTimeout(() => {
+                (!start)&&fn.apply(_this,arg); 
+                timer = 0;
+            }, interval);
+        }
+    }      
+    /*
+        addShake 添加摇一摇功能
+        参数： 
+                cbShake 类型 fn 当用户进行了摇一摇之后要做的事情
+        返回值：
+                shakeIndex 开启的第几个摇一摇功能的索引，用来删除监听     
+    */ 
+    function addShake(cbShake){ 
+        const maxRange = 60; //当用户的两次加速度差值大于这个幅度，判定用户进行了摇一摇功能
+        const minRange = 10; //当用户的两次加速度差值小于这个幅度，判定用户停止摇动手机
+        let isShake = false; //记录用户是否摇动手机
+        let lastX=0,
+        lastY = 0,
+        lastZ = 0;
+        function toShake(e){
+            let motion = e.acceleration;
+            let {x,y,z} = motion;
+            let range = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
+            if(range > maxRange){//用户进行了摇一摇
+                isShake = true;
+            }
+            if(range < minRange&&isShake){ // 停止摇一摇
+                cbShake(e);
+                isShake = false;
+            }
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+        }
+        if(!window.shakeEvent){ //建立 shakeEvent 存储所有的摇一摇的处理函数，方便一会取消
+            window.shakeEvent = [];
+        }
+        toShake = throttle(toShake);
+        window.shakeEvent.push(toShake);
+        setDeviceMotion(toShake,(errMessage)=>{
+            alert(errMessage)
+        })
+        return  window.shakeEvent.length - 1;//返回该次摇一摇处理的索引
+    }
+    /*
+        删除摇一摇监听
+            cbShake 类型 fn 当用户进行了摇一摇之后要做的事情
+    */ 
+    function remveShake(shakeIndex){
+        window.removeEventListener("devicemotion",window.shakeEvent[shakeIndex]);
+    }
+
+    // 调用摇一摇
+    {
+        // let startBtn = document.body;
+        // let closeBtn = document.querySelector("#closeBtn");
+        let isStartShake = false;
+        let shakeIndex;
+        // 再次强调 IOS 13.3 需要用户触发，再能开启摇一摇 
+        document.body.addEventListener("touchend",()=>{
+            if(isStartShake)return;
+            isStartShake = true;
+            shakeIndex = addShake(()=>{
+                alert("您进行了摇一摇")
+            })
+        });
+        // closeBtn.addEventListener("touchend",()=>{
+        //     if(!isStartShake)return;
+        //     isStartShake = false;
+        //     remveShake(shakeIndex);
+        // });
+
+    }
+    </script>
   <script type="text/javascript">
 
     var BG_WIDTH = 1024,
@@ -114,26 +244,26 @@
     var aimAngleX = 0, aimAngleY = 0;
     var curBgAngleX = 0, curBgAngleY = 0;
 
-    function permission () {
-      if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
-          // (optional) Do something before API request prompt.
-          DeviceMotionEvent.requestPermission()
-              .then( response => {
-              // (optional) Do something after API prompt dismissed.
-              if ( response == "granted" ) {
-                  window.addEventListener( "devicemotion", (e) => {
-                      // do something for 'e' here.
-                  })
-              }
-          })
-                .catch( console.error )
-        } else {
-            alert( "请使用手机浏览器" );
-        }
-    }
-    if (isiOS) {
-      permission()
-    }
+    // function permission () {
+    //   if ( typeof( DeviceMotionEvent ) !== "undefined" && typeof( DeviceMotionEvent.requestPermission ) === "function" ) {
+    //       // (optional) Do something before API request prompt.
+    //       DeviceMotionEvent.requestPermission()
+    //           .then( response => {
+    //           // (optional) Do something after API prompt dismissed.
+    //           if ( response == "granted" ) {
+    //               window.addEventListener( "devicemotion", (e) => {
+    //                   // do something for 'e' here.
+    //               })
+    //           }
+    //       })
+    //             .catch( console.error )
+    //     } else {
+    //         alert( "请使用手机浏览器" );
+    //     }
+    // }
+    // if (isiOS) {
+    //   permission()
+    // }
 
     var bindDeviceMotion = function () {
       window.addEventListener('deviceorientation', motionHandler, false)
@@ -145,6 +275,7 @@
     }
 
     bindDeviceMotion();
+    
 
     function initAnimate() {
       var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame ||
